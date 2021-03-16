@@ -1,11 +1,13 @@
 appnope==0.1.2
 backcall==0.2.0
 bcrypt==3.2.0
+blinker==1.4
 cffi==1.14.5
 click==7.1.2
 decorator==4.4.2
 Flask==1.1.2
 Flask-Bcrypt==0.7.1
+Flask-DebugToolbar==0.11.0
 Flask-SQLAlchemy==2.4.4
 Flask-WTF==0.14.3
 greenlet==1.0.0

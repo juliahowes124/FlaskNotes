@@ -20,16 +20,20 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 connect_db(app)
 db.create_all()
 
+
 @app.route('/')
 def homepage():
     return redirect('/register')
+
+
+#####Login Authentication####
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
     form = RegisterForm()
 
     if form.username.data in session:
-        return redirect('/')
+        return redirect(f'/users/{form.username.data}')
 
     if form.validate_on_submit():
         username = form.username.data
@@ -41,32 +45,56 @@ def register():
         db.session.add(user)
         db.session.commit()
         session["username"] = user.username
-        return redirect('/secret')
-    
+        return redirect(f'/users/{user.username}')
+
     return render_template("register.html", form=form)
 
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    
+
     if form.validate_on_submit():
         username = form.username.data
         pwd = form.password.data
         user = User.authenticate(username, pwd)
         if user:
             session["username"] = user.username
-            return redirect('/secret')
+            return redirect(f'/users/{user.username}')
         else:
             form.username.errors = ["Invalid username/password"]
 
     return render_template("login.html", form=form)
 
-@app.route('/secret')
-def secret():
 
-    if "username" not in session:
+@app.route('/logout')
+def logout():
+    """ clear info from the session and redirect """
+
+    session.pop("username", None)  # None
+    flash('You were logged out')
+
+    return redirect('/')
+
+### User authorization ###
+
+
+@app.route('/users/<username>')
+def secret(username):
+
+    if username != session["username"]:
         flash('You must be logged in to view')
         return redirect('/')
     else:
-        return render_template('secret.html')
+        user = User.query.get_or_404(username)
+        return render_template('secret.html', user=user)
+
+
+@app.route('/users/<username>/delete', methods=['POST'])  # why not delete?
+def delete_user(username):
+    """ remove user from db and also delete their notes
+        redirect to root """
+
+    user = User.query.get_or_404(username)
+
+    if user.posts:
