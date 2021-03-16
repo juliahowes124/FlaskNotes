@@ -2,9 +2,9 @@ from flask import Flask, render_template, redirect, flash, session
 
 from flask_debugtoolbar import DebugToolbarExtension
 
-from models import db, connect_db, User
+from models import db, connect_db, User, Note
 
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm
 
 from random import choice
 
@@ -97,4 +97,63 @@ def delete_user(username):
 
     user = User.query.get_or_404(username)
 
-    if user.posts:
+    if user.username != session.get("username"):
+        flash("You aren't authorized to delete this user")
+        return redirect('/login')
+    else:
+        db.session.delete(user)
+        db.session.commit()
+        session.pop("username", None)
+        return redirect('/')
+
+@app.route('/users/<username>/notes/add', methods=["GET", "POST"])
+def add_note(username):
+    form = NewNoteForm()
+
+#"middleware"
+    if username != session.get("username"):
+        flash('Not authorized')
+        return redirect('/')
+    
+    if form.validate_on_submit():
+        title = form.title.data
+        content = form.content.data
+        note = Note(owner=username, title=title, content=content)
+        db.session.add(note)
+        db.session.commit()
+        return redirect(f"/users/{username}")
+    
+    return render_template('create_note.html', form=form)
+
+@app.route('/notes/<int:note_id>/update', methods=["GET", "POST"])
+def update_note(note_id):
+
+    note = Note.query.get_or_404(note_id)
+    form = UpdateNoteForm(obj=note)
+
+    if note.owner != session.get("username"):
+        flash('Not authorized')
+        return redirect('/')
+    
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+        db.session.commit()
+        return redirect(f"/users/{note.owner}")
+    
+    return render_template('update_note.html', form=form)
+
+
+@app.route('/notes/<int:note_id>/delete', methods=["POST"])
+def delete_note(note_id):
+
+    note = Note.query.get_or_404(note_id)
+    username = note.owner
+    if username != session.get("username"):
+        flash('Not authorized')
+        return redirect('/')
+    
+    db.session.delete(note)
+    db.session.commit()
+    return redirect(f"/users/{username}")
+

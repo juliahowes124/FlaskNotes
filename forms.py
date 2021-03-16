@@ -20,3 +20,18 @@ class LoginForm(FlaskForm):
 
     username = StringField("Username")
     password = PasswordField("Password", validators=[InputRequired()])
+
+class NewNoteForm(FlaskForm):
+    """Form for creating a new note"""
+
+    title = StringField("Title", validators=[InputRequired()])
+    content = StringField("Content", validators=[InputRequired()])
+
+
+class UpdateNoteForm(FlaskForm):
+    """Form for updating a new note"""
+
+    title = StringField("Title", validators=[InputRequired()])
+    content = StringField("Content", validators=[InputRequired()])
+
+

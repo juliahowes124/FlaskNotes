@@ -16,4 +16,8 @@ content %}
   <li><a href="/login">Login</a></li>
 </ul>
 
+{% for msg in get_flashed_messages() %}
+{{msg}}
+{% endfor %}
+
 {% endblock %}
