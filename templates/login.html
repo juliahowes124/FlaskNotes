@@ -16,4 +16,4 @@ content %}
   <li><a href="/register">Register</a></li>
 </ul>
 
-{% endblock %}
+{% for msg in get_flashed_messages() %} {{msg}} {% endfor %} {% endblock %}

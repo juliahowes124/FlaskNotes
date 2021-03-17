@@ -1,12 +1,13 @@
 from flask import Flask, render_template, redirect, flash, session
 
+from functools import wraps
+
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User, Note
 
 from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm
 
-from random import choice
 
 app = Flask(__name__)
 
@@ -21,19 +22,42 @@ connect_db(app)
 db.create_all()
 
 
+def login_required(func):
+    @wraps(func)
+    def wrap(*args, **kwargs):
+        # if user is not logged in, redirect to login page
+        if not session.get("username"):
+            flash("Access denied")
+            return redirect("/login")
+        # finally call f. f() now haves access to g.user
+        return func(*args, **kwargs)
+    return wrap
+
+
+def auth_required(func):
+    @wraps(func)
+    def wrap(*args, **kwargs):
+
+        if kwargs['username'] != session.get('username'):
+            flash('Access denied')
+            return redirect('/login')
+        return func(*args, **kwargs)
+    return wrap
+
+
 @app.route('/')
 def homepage():
     return redirect('/register')
 
-
 #####Login Authentication####
+
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
     form = RegisterForm()
 
-    if form.username.data in session:
-        return redirect(f'/users/{form.username.data}')
+    if 'username' in session:
+        return redirect(f"/users/{session['username']}")
 
     if form.validate_on_submit():
         username = form.username.data
@@ -54,10 +78,15 @@ def register():
 def login():
     form = LoginForm()
 
+    if 'username' in session:
+        return redirect(f"/users/{session['username']}")
+
     if form.validate_on_submit():
         username = form.username.data
         pwd = form.password.data
+
         user = User.authenticate(username, pwd)
+
         if user:
             session["username"] = user.username
             return redirect(f'/users/{user.username}')
@@ -80,50 +109,49 @@ def logout():
 
 
 @app.route('/users/<username>')
+@login_required
+@auth_required
 def secret(username):
 
-    if username != session["username"]:
-        flash('You must be logged in to view')
-        return redirect('/')
-    else:
-        user = User.query.get_or_404(username)
-        return render_template('secret.html', user=user)
+    user = User.query.get_or_404(username)
+    return render_template('secret.html', user=user)
 
 
 @app.route('/users/<username>/delete', methods=['POST'])  # why not delete?
+@login_required
+@auth_required
 def delete_user(username):
     """ remove user from db and also delete their notes
         redirect to root """
 
     user = User.query.get_or_404(username)
 
-    if user.username != session.get("username"):
-        flash("You aren't authorized to delete this user")
-        return redirect('/login')
-    else:
-        db.session.delete(user)
-        db.session.commit()
-        session.pop("username", None)
-        return redirect('/')
+    db.session.delete(user)
+    db.session.commit()
+
+    session.pop("username", None)
+
+    return redirect('/')
+
 
 @app.route('/users/<username>/notes/add', methods=["GET", "POST"])
+@login_required
 def add_note(username):
     form = NewNoteForm()
 
-#"middleware"
-    if username != session.get("username"):
-        flash('Not authorized')
-        return redirect('/')
-    
     if form.validate_on_submit():
         title = form.title.data
         content = form.content.data
+
         note = Note(owner=username, title=title, content=content)
+
         db.session.add(note)
         db.session.commit()
+
         return redirect(f"/users/{username}")
-    
+
     return render_template('create_note.html', form=form)
+
 
 @app.route('/notes/<int:note_id>/update', methods=["GET", "POST"])
 def update_note(note_id):
@@ -134,13 +162,13 @@ def update_note(note_id):
     if note.owner != session.get("username"):
         flash('Not authorized')
         return redirect('/')
-    
+
     if form.validate_on_submit():
         note.title = form.title.data
         note.content = form.content.data
         db.session.commit()
         return redirect(f"/users/{note.owner}")
-    
+
     return render_template('update_note.html', form=form)
 
 
@@ -149,11 +177,23 @@ def delete_note(note_id):
 
     note = Note.query.get_or_404(note_id)
     username = note.owner
+
     if username != session.get("username"):
         flash('Not authorized')
         return redirect('/')
-    
+
     db.session.delete(note)
     db.session.commit()
+
     return redirect(f"/users/{username}")
 
+
+@app.errorhandler(404)
+def error_handler404(e):
+    return render_template('404.html')
+
+
+@app.errorhandler(401)
+def error_handler401(e):
+    # if usernamne not in session...
+    return render_template('401.html')
