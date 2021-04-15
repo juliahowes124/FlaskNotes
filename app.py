@@ -25,14 +25,11 @@ db.create_all()
 def login_required(func):
     @wraps(func)
     def wrap(*args, **kwargs):
-        # if user is not logged in, redirect to login page
         if not session.get("username"):
             flash("Access denied")
             return redirect("/login")
-        # finally call f. f() now haves access to g.user
         return func(*args, **kwargs)
     return wrap
-
 
 def auth_required(func):
     @wraps(func)
@@ -65,6 +62,11 @@ def register():
         email = form.email.data
         first_name = form.first_name.data
         last_name = form.last_name.data
+
+        if (User.query.get(username)):
+            flash('User already exists!')
+            return redirect('/register')
+
         user = User.register(username, pwd, email, first_name, last_name)
         db.session.add(user)
         db.session.commit()
