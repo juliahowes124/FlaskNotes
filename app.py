@@ -6,10 +6,25 @@ from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User, Note
 
-from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm
+from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm, ChangePasswordForm
 
+from flask_mail import Mail, Message
+
+from secrets import EMAIL_PASSWORD, EMAIL_USERNAME
 
 app = Flask(__name__)
+
+mail_settings = {
+    'MAIL_SERVER': 'smtp.gmail.com',
+    "MAIL_PORT": 465,
+    "MAIL_USE_TLS": False,
+    "MAIL_USE_SSL": True,
+    "MAIL_USERNAME": EMAIL_USERNAME,
+    "MAIL_PASSWORD": EMAIL_PASSWORD
+}
+
+app.config.update(mail_settings)
+mail = Mail(app)
 
 app.config['SECRET_KEY'] = "secret"
 
@@ -153,6 +168,23 @@ def add_note(username):
         return redirect(f"/users/{username}")
 
     return render_template('create_note.html', form=form)
+
+
+@app.route('/users/<username>/password', methods=["GET", "POST"])
+@login_required
+def change_password(username):
+    form = ChangePasswordForm()
+
+    if form.validate_on_submit():
+        email = form.email.data
+        mail.connect()
+        msg = Message("Hey there, this is a test.",
+                  sender=EMAIL_USERNAME,
+                  recipients=[email])
+        mail.send(msg)
+        return redirect(f"/users/{username}/password")
+
+    return render_template('update_password.html', form=form)
 
 
 @app.route('/notes/<int:note_id>/update', methods=["GET", "POST"])

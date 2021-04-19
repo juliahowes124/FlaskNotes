@@ -21,6 +21,7 @@ class LoginForm(FlaskForm):
     username = StringField("Username")
     password = PasswordField("Password", validators=[InputRequired()])
 
+
 class NewNoteForm(FlaskForm):
     """Form for creating a new note"""
 
@@ -34,4 +35,9 @@ class UpdateNoteForm(FlaskForm):
     title = StringField("Title", validators=[InputRequired()])
     content = StringField("Content", validators=[InputRequired()])
 
+
+class ChangePasswordForm(FlaskForm):
+    """Form for changing a password"""
+
+    email = StringField("Email", validators=[InputRequired()])
 
