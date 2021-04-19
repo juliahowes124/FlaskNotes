@@ -41,3 +41,8 @@ class ChangePasswordForm(FlaskForm):
 
     email = StringField("Email", validators=[InputRequired()])
 
+
+class ChangePasswordFormFormal(FlaskForm):
+    """Form for changing a password"""
+
+    new_password = PasswordField("New Password", validators=[InputRequired()])

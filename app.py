@@ -1,16 +1,18 @@
-from flask import Flask, render_template, redirect, flash, session
+from flask import Flask, render_template, redirect, flash, session, request
 
 from functools import wraps
+
+from secrets import token_urlsafe
 
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User, Note
 
-from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm, ChangePasswordForm
+from forms import RegisterForm, LoginForm, NewNoteForm, UpdateNoteForm, ChangePasswordForm, ChangePasswordFormFormal
 
 from flask_mail import Mail, Message
 
-from secrets import EMAIL_PASSWORD, EMAIL_USERNAME
+from my_secrets import EMAIL_PASSWORD, EMAIL_USERNAME
 
 app = Flask(__name__)
 
@@ -172,20 +174,44 @@ def add_note(username):
 
 @app.route('/users/<username>/password', methods=["GET", "POST"])
 @login_required
-def change_password(username):
+def change_password_email(username):
     form = ChangePasswordForm()
 
     if form.validate_on_submit():
         email = form.email.data
+        token = token_urlsafe(16)
+        user = User.query.get_or_404(username)
+        user.password_reset_token = token
+        db.session.commit()
         mail.connect()
-        msg = Message("Hey there, this is a test.",
+        msg = Message("Link to Update Password",
+                  html=f"<a href={'localhost:5000' + request.path + '/' + token}>{'localhost:5000' + request.path + '/' + token}</a>",
                   sender=EMAIL_USERNAME,
                   recipients=[email])
         mail.send(msg)
+        flash('Check your email for a reset link!')
         return redirect(f"/users/{username}/password")
 
     return render_template('update_password.html', form=form)
 
+
+@app.route('/users/<username>/password/<token>', methods=["GET", "POST"])
+@login_required
+def change_password(username, token):
+    form = ChangePasswordFormFormal()
+    user = User.query.get_or_404(username)
+    if user.password_reset_token != token:
+        flash('Not authorized to change password!')
+        return redirect('/')
+
+    if form.validate_on_submit():
+        new_password = form.new_password.data
+        user.change_password(new_password)
+        db.session.commit()
+        flash("Password updated successfully!")
+        return redirect(f"/users/{username}")
+
+    return render_template('update_password_formal.html', form=form)
 
 @app.route('/notes/<int:note_id>/update', methods=["GET", "POST"])
 def update_note(note_id):

@@ -24,6 +24,7 @@ class User(db.Model):
     email = db.Column(db.String(50), nullable=False, unique=True)
     first_name = db.Column(db.String(30), nullable=False)
     last_name = db.Column(db.String(30), nullable=False)
+    password_reset_token = db.Column(db.Text, unique=True)
 
     notes = db.relationship('Note', cascade="all, delete")
 
@@ -41,6 +42,10 @@ class User(db.Model):
             return user
         else:
             return False
+
+    def change_password(self, new_password):
+        hashed = bcrypt.generate_password_hash(new_password).decode('utf8')
+        self.password = hashed
 
 
 class Note(db.Model):
