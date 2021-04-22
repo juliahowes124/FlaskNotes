@@ -179,8 +179,8 @@ def change_password_email(username):
 
     if form.validate_on_submit():
         email = form.email.data
-        token = token_urlsafe(16)
         user = User.query.get_or_404(username)
+        token = token_urlsafe(16)
         user.password_reset_token = token
         db.session.commit()
         mail.connect()

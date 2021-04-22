@@ -1,3 +1,4 @@
+{% from "macros.html" import submit_button %}
 {% extends 'base.html' %} {%block title%} Register User {%endblock%} {% block
 content %}
 <form class="register" method="POST">
@@ -9,12 +10,10 @@ content %}
   </p>
   {% endfor %}
 
-  <button type="submit">Register</button>
+  <a href="/login" class="btn btn-secondary">Login</a>
+  {{submit_button("Register")}}
 </form>
 
-<ul>
-  <li><a href="/login">Login</a></li>
-</ul>
 
 {% for msg in get_flashed_messages() %}
 {{msg}}

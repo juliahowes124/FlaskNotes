@@ -1,3 +1,4 @@
+{% from "macros.html" import submit_button %}
 {% extends 'base.html' %} {%block title%} Update a Note {%endblock%} {% block
     content %}
     <form class="update_note" method="POST">
@@ -9,7 +10,7 @@
       </p>
       {% endfor %}
     
-      <button type="submit">Update</button>
+      {{ submit_button("Update")}}
     </form>
     
     {% endblock %}

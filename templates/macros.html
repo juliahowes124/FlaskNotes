@@ -1,0 +1,16 @@
+{% macro form_button(method, action, text, color='primary') -%}
+    <form method={{method}} action={{action}}>
+        <button class="btn btn-{{color}}">{{text}}</button>
+    </form>
+{%- endmacro %}
+
+{% macro anchor(text, href, color='primary') -%}
+    <a class="btn btn-{{color}}" href={{href}}>{{text}}</a>
+{%- endmacro %}
+
+{% macro submit_button(text) -%}
+    <button type="submit" class="btn btn-success">{{text}}</button>
+{%- endmacro %}
+
+
+
