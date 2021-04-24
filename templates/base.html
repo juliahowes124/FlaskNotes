@@ -13,9 +13,11 @@
     <div class="container">
         <div class="row">
             <div class="col-6 mx-auto">
+                {% for msg in get_flashed_messages() %} 
+                <div class="alert alert-primary mt-5">{{msg}}</div>
+                {% endfor %}
                 {% block content %}
                 {% endblock %}
-                {% for msg in get_flashed_messages() %} {{msg}} {% endfor %}
             </div>
         </div>
     </div>

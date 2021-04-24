@@ -88,6 +88,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         session["username"] = user.username
+        flash('Successfully registered!')
         return redirect(f'/users/{user.username}')
 
     return render_template("register.html", form=form)
@@ -108,6 +109,7 @@ def login():
 
         if user:
             session["username"] = user.username
+            flash(f"Welcome, {user.first_name}!")
             return redirect(f'/users/{user.username}')
         else:
             form.username.errors = ["Invalid username/password"]
@@ -120,13 +122,11 @@ def logout():
     """ clear info from the session and redirect """
 
     session.pop("username", None)  # None
-    flash('You were logged out')
+    flash('Logged out.')
 
     return redirect('/')
 
 ### User authorization ###
-
-
 @app.route('/users/<username>')
 @login_required
 @auth_required
@@ -136,7 +136,7 @@ def secret(username):
     return render_template('secret.html', user=user)
 
 
-@app.route('/users/<username>/delete', methods=['POST'])  # why not delete?
+@app.route('/users/<username>/delete', methods=['POST'])
 @login_required
 @auth_required
 def delete_user(username):
@@ -149,7 +149,7 @@ def delete_user(username):
     db.session.commit()
 
     session.pop("username", None)
-
+    flash('User deleted.')
     return redirect('/')
 
 
@@ -166,7 +166,7 @@ def add_note(username):
 
         db.session.add(note)
         db.session.commit()
-
+        flash('New note added!')
         return redirect(f"/users/{username}")
 
     return render_template('create_note.html', form=form)
@@ -227,6 +227,7 @@ def update_note(note_id):
         note.title = form.title.data
         note.content = form.content.data
         db.session.commit()
+        flash('Note updated!')
         return redirect(f"/users/{note.owner}")
 
     return render_template('update_note.html', form=form)
@@ -244,7 +245,7 @@ def delete_note(note_id):
 
     db.session.delete(note)
     db.session.commit()
-
+    flash('Note deleted.')
     return redirect(f"/users/{username}")
 
 

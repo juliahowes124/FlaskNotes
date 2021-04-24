@@ -1,15 +1,15 @@
 {% macro form_button(method, action, text, color='primary') -%}
     <form method={{method}} action={{action}}>
-        <button class="btn btn-{{color}}">{{text}}</button>
+        <button class="btn btn-{{color}} m-1 px-3 py-2 float-right">{{text}}</button>
     </form>
 {%- endmacro %}
 
 {% macro anchor(text, href, color='primary') -%}
-    <a class="btn btn-{{color}}" href={{href}}>{{text}}</a>
+    <a class="btn btn-{{color}} m-1 px-3 py-2 float-right" href={{href}}>{{text}}</a>
 {%- endmacro %}
 
 {% macro submit_button(text) -%}
-    <button type="submit" class="btn btn-success">{{text}}</button>
+    <button type="submit" class="btn btn-success m-1 px-3 py-2 float-right">{{text}}</button>
 {%- endmacro %}
 
 
